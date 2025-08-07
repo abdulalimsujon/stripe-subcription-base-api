@@ -40,4 +40,4 @@ const cardDetailModelSchema = new Schema(
     versionKey: false,
   },
 );
-export const subscriptionPlan = model('cardDetail', cardDetailModelSchema);
+export const CardDetailModel = model('cardDetail', cardDetailModelSchema);

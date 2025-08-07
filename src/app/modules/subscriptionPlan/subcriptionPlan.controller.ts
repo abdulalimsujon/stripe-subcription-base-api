@@ -6,6 +6,7 @@ import { subscriptionPlanDetail } from '../subcriptionDetail/subcriptionDetailMo
 import { TSubscriptionPlan } from './subcriptionPlan.interface';
 import config from '../../config';
 import Stripe from 'stripe';
+import { subcriptionHelper } from '../../helper/subcriptionHelper';
 const stripe = new Stripe(config.stripe_secrate_key as string, {
   apiVersion: '2025-07-30.basil',
 });
@@ -56,22 +57,6 @@ const singlePlan = catchAsync(async (req, res) => {
   });
 });
 
-const createSubscription = catchAsync(async (req, res) => {
-  const { id } = req.body;
-  const userdata = req.user;
-  const result = await subcriptionPlanServices.createSubscription(
-    userdata.name,
-    userdata.email,
-    id,
-  );
-  sendResponse(res, {
-    success: true,
-    statusCode: httpStatus.CREATED,
-    message: 'customer created successfully',
-    data: result,
-  });
-});
-
 const generateStripeToken = catchAsync(async (req, res) => {
   const { number, exp_month, exp_year, cvc } = req.body;
 
@@ -89,6 +74,36 @@ const generateStripeToken = catchAsync(async (req, res) => {
     statusCode: httpStatus.OK,
     message: 'Token generated successfully',
     data: token,
+  });
+});
+
+const createSubscription = catchAsync(async (req, res) => {
+  const { stripe_string } = req.body;
+  const user = req.user as {
+    _id: string;
+    username: string;
+    email: string;
+  };
+
+  if (!stripe_string) {
+    return res.status(httpStatus.BAD_REQUEST).json({
+      success: false,
+      message: 'stripe_string is required',
+    });
+  }
+
+  const result = await subcriptionPlanServices.createSubscription(
+    user.username,
+    user.email,
+    stripe_string,
+    user._id,
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: 'Token generated successfully',
+    data: result,
   });
 });
 
