@@ -19,15 +19,15 @@ const subcriptionPlanDetailSchema = new Schema(
       required: true,
     },
     subscriptionPlan_price_id: {
-      type: Types.ObjectId,
-      ref: 'subscriptionPlan',
+      type: String,
+      required: false,
     },
     plan_amount: {
       type: Number,
       required: true,
     },
     plan_amount_currency: {
-      type: Number,
+      type: String,
       required: true,
     },
     plan_interval: {
@@ -72,7 +72,7 @@ const subcriptionPlanDetailSchema = new Schema(
     versionKey: false,
   },
 );
-export const subscriptionPlanDetail = model(
-  'subcriptionPlanDetail',
+export const SubscriptionDetail = model(
+  'SubscriptionDetail',
   subcriptionPlanDetailSchema,
 );

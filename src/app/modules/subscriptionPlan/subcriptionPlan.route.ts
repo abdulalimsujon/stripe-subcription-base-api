@@ -19,10 +19,10 @@ router.post(
   Auth(),
   subcriptionPlancontroller.createSubscription,
 );
-router.post(
-  '/generate-token',
-  Auth(),
-  subcriptionPlancontroller.generateStripeToken,
-);
+// router.post(
+//   '/generate-token',
+//   Auth(),
+//   subcriptionPlancontroller.generateStripeToken,
+// );
 
 export const subcriptionPlanRoute = router;

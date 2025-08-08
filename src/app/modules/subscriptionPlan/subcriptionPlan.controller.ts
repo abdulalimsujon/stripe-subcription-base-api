@@ -42,7 +42,6 @@ const singlePlan = catchAsync(async (req, res) => {
   });
 
   let msg = ' ';
-  console.log(plan);
 
   if (haveBuyAnyPlan == 0 && plan.have_trail == true) {
     msg = `you will get ${plan[0].trial_days} days trial and after we will charge ${plan[0].amount} amount for ${plan[0].name} subscription plan `;
@@ -57,28 +56,28 @@ const singlePlan = catchAsync(async (req, res) => {
   });
 });
 
-const generateStripeToken = catchAsync(async (req, res) => {
-  const { number, exp_month, exp_year, cvc } = req.body;
+// const generateStripeToken = catchAsync(async (req, res) => {
+//   const { number, exp_month, exp_year, cvc } = req.body;
 
-  const token = await stripe.tokens.create({
-    card: {
-      number,
-      exp_month,
-      exp_year,
-      cvc,
-    },
-  });
+//   const token = await stripe.tokens.create({
+//     card: {
+//       number,
+//       exp_month,
+//       exp_year,
+//       cvc,
+//     },
+//   });
 
-  sendResponse(res, {
-    success: true,
-    statusCode: httpStatus.OK,
-    message: 'Token generated successfully',
-    data: token,
-  });
-});
+//   sendResponse(res, {
+//     success: true,
+//     statusCode: httpStatus.OK,
+//     message: 'Token generated successfully',
+//     data: token,
+//   });
+// });
 
 const createSubscription = catchAsync(async (req, res) => {
-  const { stripe_string } = req.body;
+  const { stripe_string, planId } = req.body;
   const user = req.user as {
     _id: string;
     username: string;
@@ -97,12 +96,13 @@ const createSubscription = catchAsync(async (req, res) => {
     user.email,
     stripe_string,
     user._id,
+    planId,
   );
 
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
-    message: 'Token generated successfully',
+    message: 'subcription purchased successfully',
     data: result,
   });
 });
@@ -112,5 +112,5 @@ export const subcriptionPlancontroller = {
   allPlanFromDb,
   singlePlan,
   createSubscription,
-  generateStripeToken,
+  // generateStripeToken,
 };

@@ -29,6 +29,7 @@ export const createSubscription = async (
   email: string,
   stripe_string: string,
   userId: string,
+  planId: string,
 ) => {
   try {
     // Create Stripe customer
@@ -87,11 +88,34 @@ export const createSubscription = async (
       ...cardData,
     });
 
-    return {
-      success: true,
-      customer,
-      card: cardDocument,
-    };
+    //subcriptions working starts
+
+    const plan = await subscriptionPlan.findOne({ _id: planId });
+
+    let data;
+    if (plan?.type == 0) {
+      data = await subcriptionHelper.monthly_trial_subscription_start(
+        customer.id,
+        userId,
+        plan,
+      );
+    }
+    if (plan?.type == 1) {
+      data = await subcriptionHelper.yearly_trial_subscription_start(
+        customer.id,
+        userId,
+        plan,
+      );
+    }
+    if (plan?.type == 2) {
+      data = await subcriptionHelper.lifetime_trial_subscription_start(
+        customer.id,
+        userId,
+        plan,
+      );
+    }
+
+    return data;
   } catch (error: any) {
     return {
       success: false,
