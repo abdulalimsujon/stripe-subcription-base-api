@@ -4,13 +4,14 @@ import { TSubscriptionPlan } from './subcriptionPlan.interface';
 import { subscriptionPlan } from './subscriptionPlan.model';
 import config from '../../config';
 import { CardDetailModel } from '../cardDetail/cardDetail.model';
+import { SubscriptionDetail } from '../subcriptionDetail/subcriptionDetailModel';
+
 const stripe = new Stripe(config.stripe_secrate_key as string, {
   apiVersion: '2025-07-30.basil',
 });
 
 const createSubcriptionPlan = async (data: TSubscriptionPlan) => {
   const result = await subscriptionPlan.create(data);
-
   return result;
 };
 
@@ -18,9 +19,9 @@ const getAllPlan = async () => {
   const result = await subscriptionPlan.find({});
   return result;
 };
+
 const singlePlan = async (id: string) => {
   const result = await subscriptionPlan.find({ _id: id });
-
   return result;
 };
 
@@ -81,41 +82,87 @@ export const createSubscription = async (
       throw new Error('Invalid stripe_string format');
     }
 
-    // Save to MongoDB
-    const cardDocument = await CardDetailModel.create({
+    await CardDetailModel.create({
       user_id: userId,
       customer_id: customer.id,
       ...cardData,
     });
 
+    // subscription conditions starts
+    const isAlreadybroughtSubcription = await SubscriptionDetail.countDocuments(
+      {
+        user_id: userId,
+      },
+    );
+
+    const activesubscriptionDetail = await SubscriptionDetail.findOne({
+      user_id: userId,
+      status: 'active',
+      cancel: false,
+    });
+
+    if (
+      activesubscriptionDetail &&
+      activesubscriptionDetail.plan_interval == 'month' &&
+      activesubscriptionDetail.plan_interval == 0 // ❌ this will never match — choose one type
+    ) {
+    } else if (
+      activesubscriptionDetail &&
+      activesubscriptionDetail.plan_interval == 'year' &&
+      activesubscriptionDetail.plan_interval == 1
+    ) {
+    } else if (
+      activesubscriptionDetail &&
+      activesubscriptionDetail.plan_interval == 'lifetime' &&
+      activesubscriptionDetail.plan_interval == 2
+    ) {
+    } else {
+      if (isAlreadybroughtSubcription) {
+        const plan = await subscriptionPlan.findOne({ _id: planId });
+
+        let data;
+        if (plan?.type == 0) {
+          data = await subcriptionHelper.monthly_trial_subscription_start(
+            customer.id,
+            userId,
+            plan,
+          );
+        }
+        if (plan?.type == 1) {
+          data = await subcriptionHelper.yearly_trial_subscription_start(
+            customer.id,
+            userId,
+            plan,
+          );
+        }
+        if (plan?.type == 2) {
+          data = await subcriptionHelper.lifetime_trial_subscription_start(
+            customer.id,
+            userId,
+            plan,
+          );
+          return data;
+        } else {
+          if (
+            activesubscriptionDetail &&
+            activesubscriptionDetail.plan_interval == 0
+          ) {
+          } else if (
+            activesubscriptionDetail &&
+            activesubscriptionDetail.plan_interval == 1
+          ) {
+          } else if (
+            activesubscriptionDetail &&
+            activesubscriptionDetail.plan_interval == 2
+          ) {
+          } else {
+          }
+        }
+      }
+    }
+    // subscription condition ends
+
     //subcriptions working starts
-
-    const plan = await subscriptionPlan.findOne({ _id: planId });
-
-    let data;
-    if (plan?.type == 0) {
-      data = await subcriptionHelper.monthly_trial_subscription_start(
-        customer.id,
-        userId,
-        plan,
-      );
-    }
-    if (plan?.type == 1) {
-      data = await subcriptionHelper.yearly_trial_subscription_start(
-        customer.id,
-        userId,
-        plan,
-      );
-    }
-    if (plan?.type == 2) {
-      data = await subcriptionHelper.lifetime_trial_subscription_start(
-        customer.id,
-        userId,
-        plan,
-      );
-    }
-
-    return data;
   } catch (error: any) {
     return {
       success: false,
