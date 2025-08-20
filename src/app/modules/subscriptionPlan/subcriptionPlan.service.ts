@@ -35,7 +35,7 @@ export const createSubscription = async (
   try {
     // Create Stripe customer
     const customer = await stripe.customers.create({ name, email });
-
+    const plan = await subscriptionPlan.findOne({ _id: planId });
     let cardData;
 
     if (stripe_string.startsWith('pm_')) {
@@ -100,27 +100,46 @@ export const createSubscription = async (
       status: 'active',
       cancel: false,
     });
+if (!plan) throw new Error("Plan not found");
 
+// const result = await subcriptionHelper.capture_monthly_pending_fees(
+//   customer.id,
+//   userId,
+//   name,
+//   plan
+// );
+
+const result = await subcriptionHelper.monthly_subcription_start(
+customer.id, userId, plan
+);
+ 
     if (
+      // monthly to yearly
       activesubscriptionDetail &&
       activesubscriptionDetail.plan_interval == 'month' &&
-      activesubscriptionDetail.plan_interval == 0 // ❌ this will never match — choose one type
+      plan.type == 1
     ) {
     } else if (
+      // monthly to lifetime
+      activesubscriptionDetail &&
+      activesubscriptionDetail.plan_interval == 'month' &&
+      plan.type == 2
+    ) {
+    } else if (
+      //yearly to monthly
       activesubscriptionDetail &&
       activesubscriptionDetail.plan_interval == 'year' &&
-      activesubscriptionDetail.plan_interval == 1
+      plan.type == 0
     ) {
     } else if (
+      //yearly to lifetime
       activesubscriptionDetail &&
-      activesubscriptionDetail.plan_interval == 'lifetime' &&
-      activesubscriptionDetail.plan_interval == 2
+      activesubscriptionDetail.plan_interval == 'year' &&
+      plan.type == 2
     ) {
     } else {
-      if (isAlreadybroughtSubcription) {
-        const plan = await subscriptionPlan.findOne({ _id: planId });
-
-        let data;
+      let data;
+      if (isAlreadybroughtSubcription == 0) {
         if (plan?.type == 0) {
           data = await subcriptionHelper.monthly_trial_subscription_start(
             customer.id,
@@ -141,22 +160,13 @@ export const createSubscription = async (
             userId,
             plan,
           );
-          return data;
-        } else {
-          if (
-            activesubscriptionDetail &&
-            activesubscriptionDetail.plan_interval == 0
-          ) {
-          } else if (
-            activesubscriptionDetail &&
-            activesubscriptionDetail.plan_interval == 1
-          ) {
-          } else if (
-            activesubscriptionDetail &&
-            activesubscriptionDetail.plan_interval == 2
-          ) {
-          } else {
-          }
+        }
+
+        return data;
+      } else {
+        if (plan.type == 0) {
+        } else if (plan.type == 1) {
+        } else if (plan.type == 2) {
         }
       }
     }

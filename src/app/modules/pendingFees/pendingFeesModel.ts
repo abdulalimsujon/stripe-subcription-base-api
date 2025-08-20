@@ -24,4 +24,4 @@ const PendingFeesSchema = new Schema(
     versionKey: false,
   },
 );
-export const subscriptionPlan = model('PendingFees', PendingFeesSchema);
+export const PendingFees = model('PendingFees', PendingFeesSchema);
